@@ -1,0 +1,8 @@
+## Interface: 80100
+## Title: AethyxAuras
+## Author: Aethyx
+## Version: 0.5
+
+ENV.lua
+AAura.lua
+main.lua
