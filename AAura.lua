@@ -6,7 +6,7 @@ local AANAME, AAENV = ...
 local lib = AAENV.lib
 local config = AAENV.config
 
-AAura = lib.class(function(aura, index, spellIdentifier, buffIdentifier)
+AAura = lib.class(function(aura, index, parentFrame, spellIdentifier, buffIdentifier)
   local buff = {}
   buff.name = buffIdentifier
 
@@ -15,10 +15,10 @@ AAura = lib.class(function(aura, index, spellIdentifier, buffIdentifier)
     = GetSpellInfo(spellIdentifier)
 
   -- "main" icon frame
-  local icon = CreateFrame("FRAME", nil, UIParent, nil, nil);
-  icon:SetFrameStrata("BACKGROUND")
+  local icon = CreateFrame("FRAME", nil, parentFrame, nil, nil);
+  icon:SetFrameStrata("LOW")
   local myIndex = index -1
-  icon:SetPoint("LEFT", (config.auraSize * myIndex) + (myIndex * config.auraMargin), 0)
+  icon:SetPoint("TOPLEFT", (config.auraSize * myIndex) + (myIndex * config.auraMargin), 0)
   icon:SetWidth(config.auraSize)
   icon:SetHeight(config.auraSize)
 
@@ -94,10 +94,12 @@ function AAura:UpdateCooldown(gcdEnd)
   elseif start + duration <= gcdEnd then
     -- Spell not on cooldown or ends before GCD does, so ignore
     self.texture:SetDesaturated(false)
+    self.icon:SetAlpha(1)
   else
     -- Update/set the cooldown swipe
     self.cdSpin:SetReverse(false)
     self.texture:SetDesaturated(true)
     self.cdSpin:SetCooldown(start, duration, modRate)
+    self.icon:SetAlpha(0.85)
   end
 end

@@ -27,6 +27,7 @@
 
 local AANAME, AAENV = ...
 local lib = AAENV.lib
+local config = AAENV.config
 
 -- ezpz reload ui button for testing.
 local rlui = CreateFrame("BUTTON", nil, UIParent, nil, nil)
@@ -40,45 +41,53 @@ rlui:SetScript("OnClick", function() ReloadUI() end)
 
 -- main frame, containing auras and event registrations
 local mainFrame = CreateFrame("FRAME", nil, UIParent, nil, nil)
-mainFrame:SetFrameStrata("BACKGROUND")
-mainFrame:SetPoint("BOTTOM", 0, -100)
+mainFrame:SetFrameStrata("LOW")
 -- size 2 because you can't center a single pixel on a screen?
-mainFrame:SetWidth(2)
-mainFrame:SetHeight(2)
+mainFrame:SetSize(5, 5)
+mainFrame:SetPoint("CENTER", 0, 0)
+mainFrame.texture = mainFrame:CreateTexture(nil, "BACKGROUND")
+mainFrame.texture:SetAllPoints(true)
+mainFrame.texture:SetTexture(1, 0, 0, 1)
+mainFrame.texture:SetColorTexture(1, 0, 0, 1)
+
 
 -- Each group is 1 horizontal "bar" of auras
 local groups = {
-  -- top bar
   {
     frame = CreateFrame("FRAME", nil, mainFrame, nil, nil),
     auras = {}
   },
-  -- bottom bar
   {
     frame = CreateFrame("FRAME", nil, mainFrame, nil, nil),
     auras = {}
   }
 }
--- top bar
-groups[1].frame:SetPoint("BOTTOM", 0, 1) -- 1 pixel up from the main frame, growing upwards
-groups[1].frame:SetWidth(2)
-groups[1].frame:SetHeight(2)
--- bottom bar
-groups[2].frame:SetPoint("TOP", 0, -1) -- 1 pixel down from the main frame, growing downwards
-groups[2].frame:SetWidth(2)
-groups[2].frame:SetHeight(2)
 
+local function updateGroupPositioning()
+  for i, group in ipairs(groups) do
+    local groupWidth = (#group.auras * (config.auraSize + config.auraMargin) ) - config.auraMargin
+    group.frame:SetSize(5, 5)
+    group.frame:SetPoint("TOP", groupWidth / -2, (i-1) * -config.auraSize )
+    group.frame.texture = mainFrame:CreateTexture(nil, "BACKGROUND")
+    group.frame.texture:SetAllPoints(true)
+    group.frame.texture:SetTexture(0, 0, 1, 1)
+    group.frame.texture:SetColorTexture(0, 0, 1, 1)
+
+  end
+end
+updateGroupPositioning()
 
 local spellConfigs = {
-  { spellName = "Power Word: Radiance", group = 1 }
+  { spellName = "Power Word: Radiance", group = 1 },
   { spellName = "Penance", group = 1 },
 
-  { spellName = "Fade", buffName = "Fade", group = 2 }
-  { spellName = "Rapture", buffName = "Rapture", group = 2 },
+  { spellName = "Fade", buffName = "Fade", group = 2 },
   { spellName = "Leap of Faith", group = 2 },
+  { spellName = "Rapture", buffName = "Rapture", group = 2 },
+  { spellName = "Power Word: Barrier", group = 2 },
   { spellName = "Pain Suppression", group = 2 },
+  { spellName = "Shadowfiend", group = 2 },
   { spellName = "Psychic Scream", group = 2 },
-  { spellName = "Power Word: Barrier", group = 2 }
 }
 
 local auras = {}
@@ -86,11 +95,12 @@ local PLAYER_GUID = ""
 local function createAuras()
   PLAYER_GUID = UnitGUID("player")
   for i, spellConfig in ipairs(spellConfigs) do
-    local aura = AAura(#groups[spellConfig.group].auras + 1, spellConfig.spellName, spellConfig.buffName)
-    groups[spellConfig.group].auras.push(aura)
+    local group = groups[spellConfig.group]
+    local aura = AAura(#group.auras + 1, group.frame, spellConfig.spellName, spellConfig.buffName)
+    table.insert(group.auras, aura)
     auras[i] = aura
   end
-  -- TODO(aethyx): center auras/groups here?
+  updateGroupPositioning()
 
   rlui.texture = rlui:CreateTexture(nil, "BACKGROUND")
   rlui.texture:SetAllPoints(rlui)
