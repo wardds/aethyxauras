@@ -21,9 +21,13 @@ AAENV.config = {
 
 AAENV.lib = {}
 
-AAENV.lib.GetGcdEnd = function()
-  local gcdStart, gcdDuration = GetSpellCooldown(61304)
-  return gcdStart + gcdDuration
+AAENV.lib.GetGcdInfo = function()
+  local start, duration = GetSpellCooldown(61304)
+  return {
+    start = start,
+    duration = duration,
+    finish = start + duration
+  }
 end
 
 AAENV.lib.FindBuffByID = function(unit, id)

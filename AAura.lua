@@ -77,14 +77,14 @@ function AAura:BuffRemoved(spellID)
     return
   end
   self.buffActive = false
-  -- immediately update the cooldown swipe to the spell's cooldown
-  self:UpdateCooldown(lib.GetGcdEnd())
+  -- Immediately update the cooldown swipe to the spell's cooldown
+  self:UpdateCooldown(lib.GetGcdInfo())
   -- TODO(aethyx): remove glow effect
 end
 
-function AAura:UpdateCooldown(gcdEnd)
+function AAura:UpdateCooldown(gcdInfo)
+  -- Do nothing when our associated buff is active
   if self.buffActive then
-    -- Do nothing when our associated buff is active
     return
   end
 

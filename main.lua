@@ -128,7 +128,7 @@ end
 
 -- Updates all auras' cooldowns
 local function updateCooldowns()
-  callHandlers("UpdateCooldown", lib.GetGcdEnd())
+  callHandlers("UpdateCooldown", lib.GetGcdInfo())
 end
 
 -- Handles the OnUpdate event, doing regular updates
