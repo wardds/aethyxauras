@@ -89,10 +89,15 @@ function AAura:UpdateCooldown(gcdInfo)
   end
 
   local start, duration, enabled, modRate = GetSpellCooldown(self.spell.spellID)
+  local finish = start + duration
   if not enabled then
     print("spell cooldown not enabled! " .. self.spell.name)
-  elseif start + duration <= gcdEnd then
-    -- Spell not on cooldown or ends before GCD does, so ignore
+  elseif finish <= gcdInfo.finish then
+    -- Spell exactly matches gcd info => set to 0 (probably a proc reset)
+    if duration ~= 0 and start == gcdInfo.start and duration == gcdInfo.duration then
+      self.cdSpin:SetCooldown(0, 0)
+    end
+    -- Spell not on cooldown or ends before GCD does, so set these back to normal
     self.texture:SetDesaturated(false)
     self.icon:SetAlpha(1)
   else
