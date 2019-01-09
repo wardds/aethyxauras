@@ -17,8 +17,6 @@
 --    the SPELL_UPDATE_COOLDOWN event seems to handle changes in cooldowns just fine, and triggers
 --    quite often, so the swipe is always correct, just need to know when the cd finishes
 
--- PROGRAMMED ON PLANE:
--- Check if the positioning of the groups is fine
 -- Position config/logic:
 --  totalWidth = (#auras * (size + margin) ) - margin
 --  startPos = totalWidth / -2 (if anchors are left)
@@ -32,7 +30,7 @@ local config = AAENV.config
 -- ezpz reload ui button for testing.
 local rlui = CreateFrame("BUTTON", nil, UIParent, nil, nil)
 rlui:SetFrameStrata("BACKGROUND")
-rlui:SetPoint("RIGHT", -100, 40)
+rlui:SetPoint("BOTTOM", -350, 0)
 rlui:SetWidth(40)
 rlui:SetHeight(40)
 rlui:Enable()
@@ -44,7 +42,7 @@ local mainFrame = CreateFrame("FRAME", nil, UIParent, nil, nil)
 mainFrame:SetFrameStrata("LOW")
 -- size 2 because you can't center a single pixel on a screen?
 mainFrame:SetSize(5, 5)
-mainFrame:SetPoint("CENTER", 0, 0)
+mainFrame:SetPoint("BOTTOM", 0, 240)
 mainFrame.texture = mainFrame:CreateTexture(nil, "BACKGROUND")
 mainFrame.texture:SetAllPoints(true)
 mainFrame.texture:SetTexture(1, 0, 0, 1)
@@ -67,7 +65,7 @@ local function updateGroupPositioning()
   for i, group in ipairs(groups) do
     local groupWidth = (#group.auras * (config.auraSize + config.auraMargin) ) - config.auraMargin
     group.frame:SetSize(5, 5)
-    group.frame:SetPoint("TOP", groupWidth / -2, (i-1) * -config.auraSize )
+    group.frame:SetPoint("TOP", groupWidth / -2, ((i-1) * -config.auraSize) - ((i-1) * config.auraMargin) )
     group.frame.texture = mainFrame:CreateTexture(nil, "BACKGROUND")
     group.frame.texture:SetAllPoints(true)
     group.frame.texture:SetTexture(0, 0, 1, 1)
@@ -78,16 +76,26 @@ end
 updateGroupPositioning()
 
 local spellConfigs = {
-  { spellName = "Power Word: Radiance", group = 1 },
-  { spellName = "Penance", group = 1 },
+  { spellName = "Storm Bolt", group = 1 },
+  { spellName = "Warbreaker", group = 1 },
+  { spellName = "Mortal Strike", group = 1 },
+  { spellName = "Execute", buffName = "Sudden Death", group = 1 },
+  { spellName = "Overpower", group = 1 },
+  { spellName = "Victory Rush", group = 1 },
+  { spellName = "Pummel", group = 1 },
+  { spellName = "Taunt", group = 1 },
+  { spellName = "Berserker Rage", group = 1 },
 
-  { spellName = "Fade", buffName = "Fade", group = 2 },
-  { spellName = "Leap of Faith", group = 2 },
-  { spellName = "Rapture", buffName = "Rapture", group = 2 },
-  { spellName = "Power Word: Barrier", group = 2 },
-  { spellName = "Pain Suppression", group = 2 },
-  { spellName = "Shadowfiend", group = 2 },
-  { spellName = "Psychic Scream", group = 2 },
+  { spellName = "Intimidating Shout", group = 2 },
+  { spellName = "Spatial Rift", group = 2 },
+  { spellName = "Charge", group = 2 },
+  { spellName = "Heroic Leap", group = 2 },
+  { spellName = "Avatar", buffName = "Avatar", group = 2 },
+  { spellName = "Sweeping Strikes", buffName = "Sweeping Strikes", group = 2 },
+  { spellName = "Bladestorm", buffName = "Bladestorm", group = 2 },
+  { spellName = "Die by the Sword", buffName = "Die by the Sword", group = 2 },
+  { spellName = "Heroic Throw", group = 2 },
+  { spellName = "Rallying Cry", buffName = "Rallying Cry", group = 2 },
 }
 
 local auras = {}
