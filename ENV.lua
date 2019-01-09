@@ -15,8 +15,8 @@ AAENV.CLOG_EVENTS_AURA_REMOVED = {
 }
 
 AAENV.config = {
-  auraSize = 35,
-  auraMargin = 2,
+  auraSize = 28,
+  auraMargin = 4,
 }
 
 AAENV.lib = {}
