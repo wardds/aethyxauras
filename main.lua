@@ -1,19 +1,21 @@
 -- Addon's main entry point.
 
 -- TODO(aethyx): figure out good frame stratas for the groups
--- TODO(aethyx): Single class/spec spell list (disc priest?)
 -- TODO(aethyx): Aura positioning
 -- TODO(aethyx): Buff active glow effect
+-- TODO(aethyx): Single class/spec spell list (arms warr?)
 -- TODO(aethyx): Aura visibility for spec/talents
 -- TODO(aethyx): Aura visibility for "show when ready"
 -- TODO(aethyx): Buff stack count (and dose application/removal!)
 -- TODO(aethyx): Cooldown charge count
+-- TODO(aethyx): UpdateCooldown "not enabled" path
+-- TODO(aethyx): Buff active without duration path
 -- TODO(aethyx): More classes spell lists
 -- TODO(aethyx): User configuration
 -- TODO(aethyx): Optimization ideas:
 --  --Have handlers return true if they've handled something, so callHandlers can break the loop
 --    this would however break if multiple auras need to handle the same buff/spell/...
---  --Avoid OnUpdate handler by setting timers to return unset desaturation on icon?
+--  --Avoid OnUpdate handler by setting timers to unset desaturation on icon?
 --    the SPELL_UPDATE_COOLDOWN event seems to handle changes in cooldowns just fine, and triggers
 --    quite often, so the swipe is always correct, just need to know when the cd finishes
 
