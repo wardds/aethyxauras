@@ -169,10 +169,10 @@ local function eventHandler(self, event, ...)
   end
 end
 
-rlui:SetScript("OnUpdate", updateHandler);
-rlui:SetScript("OnEvent", eventHandler);
-rlui:RegisterEvent("SPELL_UPDATE_COOLDOWN");
-rlui:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
-rlui:RegisterEvent("PLAYER_ENTERING_WORLD");
-rlui:RegisterEvent("PLAYER_LOGIN");
+mainFrame:SetScript("OnUpdate", updateHandler);
+mainFrame:SetScript("OnEvent", eventHandler);
+mainFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN");
+mainFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
+mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD");
+mainFrame:RegisterEvent("PLAYER_LOGIN");
 
