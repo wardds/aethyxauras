@@ -4,5 +4,7 @@
 ## Version: 0.5
 
 ENV.lua
+spells_warrior.lua
+
 AAura.lua
 main.lua

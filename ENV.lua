@@ -1,5 +1,3 @@
--- lib.lua
-
 local AANAME, AAENV = ...
 
 AAENV.CLOG_EVENTS_AURA_APPLIED = {
