@@ -128,7 +128,7 @@ end
 
 -- Updates all auras' cooldowns
 local function updateCooldowns()
-  callHandlers("UpdateCooldown", lib.GetGcdEnd())
+  callHandlers("UpdateCooldown", lib.GetGcdInfo())
 end
 
 -- Handles the OnUpdate event, doing regular updates
@@ -160,19 +160,15 @@ local function eventHandler(self, event, ...)
         end
       end
     elseif AAENV.CLOG_EVENTS_AURA_REMOVED[arg[2]] then -- aura removed
-      if (arg[4] == PLAYER_GUID and arg[4] == arg[8]) then -- self-removed(?)
-        callHandlers("BuffRemoved", arg[12])
-      end
+      callHandlers("BuffRemoved", arg[12])
     end
   elseif (event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LOGIN") and #auras == 0 then
     createAuras()
   end
 end
 
-mainFrame:SetScript("OnUpdate", updateHandler);
 mainFrame:SetScript("OnEvent", eventHandler);
 mainFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN");
 mainFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD");
 mainFrame:RegisterEvent("PLAYER_LOGIN");
-

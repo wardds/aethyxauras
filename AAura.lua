@@ -34,13 +34,18 @@ AAura = lib.class(function(aura, index, parentFrame, spellIdentifier, buffIdenti
   local cdSpin = CreateFrame("COOLDOWN", nil, icon, "CooldownFrameTemplate");
   cdSpin:SetAllPoints(icon)
 
-  aura.buffActive = false
-
   aura.spell = spell
   aura.buff = buff
   aura.icon = icon
   aura.texture = tex
   aura.cdSpin = cdSpin
+
+  aura.buffActive = false
+
+  -- Can hold a C_Timer.NewTimer to track when the cooldown is supposed to finish
+  aura.cdTimer = nil
+  -- Stores the finish time of the cooldown (=when the self.cdTimer will elapse)
+  aura.cdFinish = 0
 end)
 
 function AAura:Show()
@@ -77,29 +82,45 @@ function AAura:BuffRemoved(spellID)
     return
   end
   self.buffActive = false
-  -- immediately update the cooldown swipe to the spell's cooldown
-  self:UpdateCooldown(lib.GetGcdEnd())
+  -- Immediately update the cooldown swipe to the spell's cooldown
+  self:UpdateCooldown(lib.GetGcdInfo())
   -- TODO(aethyx): remove glow effect
 end
 
-function AAura:UpdateCooldown(gcdEnd)
+function AAura:UpdateCooldown(gcdInfo)
+  -- Do nothing when our associated buff is active
   if self.buffActive then
-    -- Do nothing when our associated buff is active
     return
   end
 
-  local start, duration, enabled, modRate = GetSpellCooldown(self.spell.spellID)
-  if not enabled then
-    print("spell cooldown not enabled! " .. self.spell.name)
-  elseif start + duration <= gcdEnd then
-    -- Spell not on cooldown or ends before GCD does, so ignore
-    self.texture:SetDesaturated(false)
-    self.icon:SetAlpha(1)
-  else
+  local start, duration, charges, maxCharges, modRate = lib.GetSpellCooldownAndCharges(self.spell.spellID, gcdInfo)
+  local finish = start + duration
+
+  if duration and duration > 0 and self.cdFinish ~= finish then
+    -- Something has changed in the cooldown, but it's not ready yet
+    if self.timer then
+      self.timer:Cancel()
+      self.timer = nil
+    end
+    local _self = self
+    self.timer = C_Timer.NewTimer(finish - GetTime(), function(self)
+      _self.timer = nil
+      _self:UpdateCooldown(lib.GetGcdInfo())
+    end)
     -- Update/set the cooldown swipe
     self.cdSpin:SetReverse(false)
     self.texture:SetDesaturated(true)
     self.cdSpin:SetCooldown(start, duration, modRate)
     self.icon:SetAlpha(0.85)
+  elseif duration == 0 then
+    -- No duration but the timer still running, it's a reset or cd reduction
+    if self.timer then
+      self.cdSpin:SetCooldown(start, duration)
+      self.timer:Cancel()
+      self.timer = nil
+    end
+    self.texture:SetDesaturated(false)
+    self.icon:SetAlpha(1)
   end
+  self.cdFinish = finish
 end
