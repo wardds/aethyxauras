@@ -77,33 +77,18 @@ local function updateGroupPositioning()
 end
 updateGroupPositioning()
 
-local spellConfigs = {
-  { spellName = "Storm Bolt", group = 1 },
-  { spellName = "Warbreaker", group = 1 },
-  { spellName = "Mortal Strike", group = 1 },
-  { spellName = "Execute", buffName = "Sudden Death", group = 1 },
-  { spellName = "Overpower", group = 1 },
-  { spellName = "Victory Rush", group = 1 },
-  { spellName = "Pummel", group = 1 },
-  { spellName = "Taunt", group = 1 },
-  { spellName = "Berserker Rage", group = 1 },
-
-  { spellName = "Intimidating Shout", group = 2 },
-  { spellName = "Spatial Rift", group = 2 },
-  { spellName = "Charge", group = 2 },
-  { spellName = "Heroic Leap", group = 2 },
-  { spellName = "Avatar", buffName = "Avatar", group = 2 },
-  { spellName = "Sweeping Strikes", buffName = "Sweeping Strikes", group = 2 },
-  { spellName = "Bladestorm", buffName = "Bladestorm", group = 2 },
-  { spellName = "Die by the Sword", buffName = "Die by the Sword", group = 2 },
-  { spellName = "Heroic Throw", group = 2 },
-  { spellName = "Rallying Cry", buffName = "Rallying Cry", group = 2 },
-}
-
 local auras = {}
 local PLAYER_GUID = ""
 local function createAuras()
   PLAYER_GUID = UnitGUID("player")
+  local _, class = UnitClass("player")
+  local spec = select(2, GetSpecializationInfo(GetSpecialization()))
+  local spellConfigs = AAENV.spells[class][spec];
+  if not spellConfigs then
+    print("No configuration found for class/spec", class, spec)
+    return
+  end
+
   for i, spellConfig in ipairs(spellConfigs) do
     local group = groups[spellConfig.group]
     local aura = AAura(#group.auras + 1, group.frame, spellConfig.spellName, spellConfig.buffName)
