@@ -167,7 +167,6 @@ local function eventHandler(self, event, ...)
   end
 end
 
---mainFrame:SetScript("OnUpdate", updateHandler);
 mainFrame:SetScript("OnEvent", eventHandler);
 mainFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN");
 mainFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
