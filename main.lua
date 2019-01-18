@@ -118,16 +118,17 @@ local function updateCooldowns()
   callHandlers("UpdateCooldown", lib.GetGcdInfo())
 end
 
+-- Throttle the checks to save some cpu cycles
+local throttleUpdateRanges = 0.2
+local sinceUpdateRange = 0
 -- Handles the OnUpdate event, doing regular updates
-local throttleUpdateCooldowns = 0.25
-local sinceUpdateCooldowns = 0
 local function updateHandler(self, elapsed)
-  -- Update all cooldowns as required.
-  -- This is really just because of the desaturation effect
-  sinceUpdateCooldowns = sinceUpdateCooldowns + elapsed
-  if (sinceUpdateCooldowns >= throttleUpdateCooldowns) then
-    sinceUpdateCooldowns = 0
-    updateCooldowns()
+  -- Update ranges periodically.
+  -- No other events to check this from...
+  sinceUpdateRange = sinceUpdateRange + elapsed
+  if (sinceUpdateRange >= throttleUpdateRanges) then
+    sinceUpdateRange = 0
+    callHandlers("UpdateRange")
   end
 end
 
@@ -151,11 +152,15 @@ local function eventHandler(self, event, ...)
     end
   elseif (event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LOGIN") and #auras == 0 then
     createAuras()
+  elseif event == "SPELL_UPDATE_USABLE" then
+    callHandlers("UpdateUsable")
   end
 end
 
-mainFrame:SetScript("OnEvent", eventHandler);
-mainFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN");
-mainFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
-mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD");
-mainFrame:RegisterEvent("PLAYER_LOGIN");
+mainFrame:SetScript("OnUpdate", updateHandler)
+mainFrame:SetScript("OnEvent", eventHandler)
+mainFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+mainFrame:RegisterEvent("SPELL_UPDATE_USABLE")
+mainFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+mainFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+mainFrame:RegisterEvent("PLAYER_LOGIN")
