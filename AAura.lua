@@ -6,7 +6,7 @@ local AANAME, AAENV = ...
 local lib = AAENV.lib
 local config = AAENV.config
 
-AAura = lib.class(function(aura, index, parentFrame, spellIdentifier, buffIdentifier)
+AAura = lib.class(function(aura, parentFrame, spellIdentifier, buffIdentifier)
   local buff = {}
   buff.name = buffIdentifier
 
@@ -17,8 +17,6 @@ AAura = lib.class(function(aura, index, parentFrame, spellIdentifier, buffIdenti
   -- "main" icon frame
   local icon = CreateFrame("FRAME", nil, parentFrame, nil, nil);
   icon:SetFrameStrata("LOW")
-  local myIndex = index -1
-  icon:SetPoint("TOPLEFT", (config.auraSize * myIndex) + (myIndex * config.auraMargin), 0)
   icon:SetWidth(config.auraSize)
   icon:SetHeight(config.auraSize)
 
@@ -54,6 +52,10 @@ end
 
 function AAura:Hide()
   self.icon:Hide()
+end
+
+function AAura:SetPosition(point, x, y)
+  self.icon:SetPoint(point, x, y)
 end
 
 function AAura:BuffApplied(name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff, isCastByPlayer, nameplateShowAll, timeMod)
