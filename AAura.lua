@@ -125,8 +125,13 @@ function AAura:UpdateCooldown(gcdInfo)
     self.texture:SetDesaturated(true)
     self.cdSpin:SetCooldown(start, duration, modRate)
     self.icon:SetAlpha(0.85)
-  elseif duration == 0 then
-    -- No duration but the timer still running, it's a reset or cd reduction
+  elseif duration == 0 and not (start == gcdInfo.start and self.cdFinish > 0 and self.cdFinish < gcdInfo.finish) then
+    -- Some crazy condition thanks to Blizzard's GCD shenanigans. Basically we only reset our running timer when
+    -- a) duration has reset to 0 (either because it is actually 0, or less than the current GCD)
+    -- AND
+    -- b) Does not! exactly match the gcd's start and have a timer running that's less than the gcd anyway
+    -- The b) case is there because spells that are on gcd whose cd will end before a running gcd will get defaulted to
+    -- 0 duration but we just want to let their timer run out like usual because it's before the end of the gcd anyway
     if self.timer then
       self.cdSpin:SetCooldown(start, duration)
       self.timer:Cancel()
@@ -150,6 +155,10 @@ function AAura:UpdateUsable()
   self:CheckUsable()
   self:CheckRange() -- Also check range
   self:UpdateCanUse()
+
+  if self.spell.name == "Mortal Strike" or self.spell.name == "Charge" then
+    print(self.spell.name, self.canUse.usable, self.canUse.noMana, self.canUse.inRange)
+  end
 end
 
 function AAura:CheckRange()
