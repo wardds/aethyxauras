@@ -50,7 +50,6 @@ mainFrame.texture:SetAllPoints(true)
 mainFrame.texture:SetTexture(1, 0, 0, 1)
 mainFrame.texture:SetColorTexture(1, 0, 0, 1)
 
-
 -- Each group is 1 horizontal "bar" of auras
 local groups = {
   {
@@ -73,6 +72,9 @@ local function updateGroupPositioning()
     group.frame.texture:SetTexture(0, 0, 1, 1)
     group.frame.texture:SetColorTexture(0, 0, 1, 1)
 
+    for i, aura in ipairs(group.auras) do
+      aura:SetPosition("TOPLEFT", (config.auraSize * i) + (i * config.auraMargin), 0)
+    end
   end
 end
 updateGroupPositioning()
@@ -83,7 +85,7 @@ local function createAuras()
   PLAYER_GUID = UnitGUID("player")
   local _, class = UnitClass("player")
   local spec = select(2, GetSpecializationInfo(GetSpecialization()))
-  local spellConfigs = AAENV.spells[class][spec];
+  local spellConfigs = AAENV.spells[class][spec]
   if not spellConfigs then
     print("No configuration found for class/spec", class, spec)
     return
@@ -91,7 +93,7 @@ local function createAuras()
 
   for i, spellConfig in ipairs(spellConfigs) do
     local group = groups[spellConfig.group]
-    local aura = AAura(#group.auras + 1, group.frame, spellConfig.spellName, spellConfig.buffName)
+    local aura = AAura(group.frame, spellConfig.spellName, spellConfig.buffName)
     table.insert(group.auras, aura)
     auras[i] = aura
   end
