@@ -3,12 +3,11 @@
 -- TODO(aethyx): figure out good frame stratas for the groups
 -- TODO(aethyx): Aura positioning
 -- TODO(aethyx): Buff active glow effect
--- TODO(aethyx): Single class/spec spell list (arms warr?)
 -- TODO(aethyx): Aura visibility for spec/talents
 -- TODO(aethyx): Aura visibility for "show when ready"
 -- TODO(aethyx): Buff stack count (and dose application/removal!)
 -- TODO(aethyx): Cooldown charge count
--- TODO(aethyx): UpdateCooldown "not enabled" path
+-- TODO(aethyx): get cooldown/buff information on login/reload
 -- TODO(aethyx): Buff active without duration path
 -- TODO(aethyx): More classes spell lists
 -- TODO(aethyx): User configuration
@@ -62,22 +61,36 @@ local groups = {
   }
 }
 
+local function GetShownAurasOfGroup(group)
+  local shownAuras = {}
+  for i, aura in ipairs(group.auras) do
+    if aura:IsShown() then
+      table.insert(shownAuras, aura)
+    end
+  end
+  return shownAuras
+end
+
 local function updateGroupPositioning()
   for i, group in ipairs(groups) do
-    local groupWidth = (#group.auras * (config.auraSize + config.auraMargin) ) - config.auraMargin
-    group.frame:SetSize(5, 5)
+    local shownAuras = GetShownAurasOfGroup(group)
+    local groupWidth = (#shownAuras * (config.auraSize + config.auraMargin) ) - config.auraMargin
+    group.frame:SetSize(2, 2)
     group.frame:SetPoint("TOP", groupWidth / -2, ((i-1) * -config.auraSize) - ((i-1) * config.auraMargin) )
-    group.frame.texture = mainFrame:CreateTexture(nil, "BACKGROUND")
-    group.frame.texture:SetAllPoints(true)
-    group.frame.texture:SetTexture(0, 0, 1, 1)
-    group.frame.texture:SetColorTexture(0, 0, 1, 1)
+    -- group.frame.texture = mainFrame:CreateTexture(nil, "BACKGROUND")
+    -- group.frame.texture:SetAllPoints(true)
+    -- group.frame.texture:SetTexture(0, 0, 1, 1)
+    -- group.frame.texture:SetColorTexture(0, 0, 1, 1)
 
-    for i, aura in ipairs(group.auras) do
-      aura:SetPosition("TOPLEFT", (config.auraSize * i) + (i * config.auraMargin), 0)
+    for i, aura in ipairs(shownAuras) do
+      if aura:IsShown() then
+        aura:SetPosition("TOPLEFT", (config.auraSize * (i-1)) + ((i-1) * config.auraMargin), 0)
+      end
     end
   end
 end
 updateGroupPositioning()
+
 
 local auras = {}
 local PLAYER_GUID = ""
@@ -97,6 +110,19 @@ local function createAuras()
     table.insert(group.auras, aura)
     auras[i] = aura
   end
+  local raceName, raceFile, _ = UnitRace("player")
+  local racialConfigs = AAENV.racials[raceFile]
+  if not racialConfigs then
+    print("No configuration found for race", raceName)
+  else
+    for i, spellConfig in ipairs(racialConfigs) do
+      local group = groups[spellConfig.group]
+      local aura = AAura(group.frame, spellConfig.spellName, spellConfig.buffName)
+      table.insert(group.auras, aura)
+      auras[i] = aura
+    end
+  end
+
   updateGroupPositioning()
 
   rlui.texture = rlui:CreateTexture(nil, "BACKGROUND")
@@ -152,6 +178,7 @@ local function eventHandler(self, event, ...)
     end
   elseif (event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LOGIN") and #auras == 0 then
     createAuras()
+    callHandlers("UpdateUsable")
   elseif event == "SPELL_UPDATE_USABLE" then
     callHandlers("UpdateUsable")
   end

@@ -9,42 +9,49 @@ local config = AAENV.config
 AAura = lib.class(function(aura, parentFrame, spellIdentifier, buffIdentifier)
   local buff = {}
   buff.name = buffIdentifier
+  aura.buff = buff
+  aura.buffActive = false
 
-  local spell = {}
-  spell.name, _, spell.iconTexPath, _, _, _, spell.spellID
-    = GetSpellInfo(spellIdentifier)
+  local spell = { name = nil, iconTexPath = nil, spellID = nil }
+  spell.name, _, spell.iconTexPath, _, _, _, spell.spellID = GetSpellInfo(spellIdentifier)
+  if spellIdentifier == "Storm Bolt" then
+    print(spellIdentifier)
+    print(unpack(spell)) -- WTFWTFWTF
+    print(GetSpellInfo(spellIdentifier))
+  end
+  aura.spell = spell
 
   -- "main" icon frame
   local icon = CreateFrame("FRAME", nil, parentFrame, nil, nil);
+  aura.icon = icon
   icon:SetFrameStrata("LOW")
   icon:SetWidth(config.auraSize)
   icon:SetHeight(config.auraSize)
 
   -- Background texture for the icon
   local tex = icon:CreateTexture(nil, "BACKGROUND")
+  aura.texture = tex
   tex:SetAllPoints(icon) -- hook to icon's frame
-  tex:SetTexture(spell.iconTexPath) -- set as background texture
   -- set a texZoom on the texture to avoid the (ugly-ass) icon corners
   local texZoom = 0.07
   tex:SetTexCoord(0 + texZoom, 1 - texZoom, 0 + texZoom, 1 - texZoom)
 
+  if not spell.name or not spell.iconTexPath or not spell.spellID then
+    aura:Hide()
+  else
+    tex:SetTexture(spell.iconTexPath) -- set as background texture
+  end
+
   -- Foreground texture for the red overlay
   local colorTexture = icon:CreateTexture(nil, "OVERLAY")
+  aura.colorTexture = colorTexture
   colorTexture:SetAllPoints(icon) -- hook to icon's frame
   colorTexture:SetColorTexture(0, 0, 0, 0)
 
   -- Cooldown frame for the icon
   local cdSpin = CreateFrame("COOLDOWN", nil, icon, "CooldownFrameTemplate");
-  cdSpin:SetAllPoints(icon)
-
-  aura.spell = spell
-  aura.buff = buff
-  aura.icon = icon
-  aura.texture = tex
-  aura.colorTexture = colorTexture
   aura.cdSpin = cdSpin
-
-  aura.buffActive = false
+  cdSpin:SetAllPoints(icon)
 
   -- Can hold a C_Timer.NewTimer to track when the cooldown is supposed to finish
   aura.cdTimer = nil
@@ -63,6 +70,10 @@ end
 
 function AAura:Hide()
   self.icon:Hide()
+end
+
+function AAura:IsShown()
+  return self.icon:IsShown()
 end
 
 function AAura:SetPosition(point, x, y)
@@ -101,12 +112,15 @@ function AAura:BuffRemoved(spellID)
 end
 
 function AAura:UpdateCooldown(gcdInfo)
+  if self.spell.name == 'Storm Bolt' then
+    print("eyo")
+  end
   -- Do nothing when our associated buff is active
-  if self.buffActive then
+  if self.buffActive or not self.spell.spellID then
     return
   end
 
-  local start, duration, charges, maxCharges, modRate = lib.GetSpellCooldownAndCharges(self.spell.spellID, gcdInfo)
+  local start, duration, charges, maxCharges, modRate, matchesGCD = lib.GetSpellCooldownAndCharges(self.spell.spellID, gcdInfo)
   local finish = start + duration
 
   if duration and duration > 0 and self.cdFinish ~= finish then
@@ -116,35 +130,41 @@ function AAura:UpdateCooldown(gcdInfo)
       self.timer = nil
     end
     local _self = self
-    self.timer = C_Timer.NewTimer(finish - GetTime(), function(self)
-      _self.timer = nil
-      _self:UpdateCooldown(lib.GetGcdInfo())
+    self.timer = C_Timer.NewTimer(finish - GetTime(), function()
+      _self:SetCooldownInactive()
     end)
+    self:SetCooldownActive(start, duration, modRate)
+  elseif duration == 0 and not matchesGCD then
+    -- Duration ran out and doesn't match GCD = a proc/reset mechanic
+    self:SetCooldownInactive()
+  end
+  self.cdFinish = finish
+end
+
+function AAura:SetCooldownActive(start, duration, modRate)
     -- Update/set the cooldown swipe
     self.cdSpin:SetReverse(false)
     self.texture:SetDesaturated(true)
     self.cdSpin:SetCooldown(start, duration, modRate)
     self.icon:SetAlpha(0.85)
-  elseif duration == 0 and not (start == gcdInfo.start and self.cdFinish > 0 and self.cdFinish < gcdInfo.finish) then
-    -- Some crazy condition thanks to Blizzard's GCD shenanigans. Basically we only reset our running timer when
-    -- a) duration has reset to 0 (either because it is actually 0, or less than the current GCD)
-    -- AND
-    -- b) Does not! exactly match the gcd's start and have a timer running that's less than the gcd anyway
-    -- The b) case is there because spells that are on gcd whose cd will end before a running gcd will get defaulted to
-    -- 0 duration but we just want to let their timer run out like usual because it's before the end of the gcd anyway
-    if self.timer then
-      self.cdSpin:SetCooldown(start, duration)
-      self.timer:Cancel()
-      self.timer = nil
-    end
-    self.texture:SetDesaturated(false)
-    self.icon:SetAlpha(1)
+end
+
+function AAura:SetCooldownInactive()
+  if self.timer then
+    self.timer:Cancel()
+    self.timer = nil
   end
-  self.cdFinish = finish
+  self.cdSpin:SetCooldown(0, 0)
+  self.texture:SetDesaturated(false)
+  self.icon:SetAlpha(1)
 end
 
 function AAura:CheckUsable()
-  self.canUse.usable, self.canUse.noMana = IsUsableSpell(self.spell.name)
+  if self.spell.name then
+    self.canUse.usable, self.canUse.noMana = IsUsableSpell(self.spell.name)
+  else
+    self.canUse.inRange = false
+  end
 end
 
 function AAura:UpdateUsable()
@@ -155,14 +175,14 @@ function AAura:UpdateUsable()
   self:CheckUsable()
   self:CheckRange() -- Also check range
   self:UpdateCanUse()
-
-  if self.spell.name == "Mortal Strike" or self.spell.name == "Charge" then
-    print(self.spell.name, self.canUse.usable, self.canUse.noMana, self.canUse.inRange)
-  end
 end
 
 function AAura:CheckRange()
-  self.canUse.inRange = IsSpellInRange(self.spell.name, "target")
+  if self.spell.name then
+    self.canUse.inRange = IsSpellInRange(self.spell.name, "target")
+  else
+    self.canUse.inRange = false
+  end
 end
 
 function AAura:UpdateRange()
@@ -171,9 +191,10 @@ function AAura:UpdateRange()
 end
 
 function AAura:UpdateCanUse()
-  local canUse = self.canUse
-  if not canUse.usable or canUse.inRange == 0 then
-    -- Could do a different effect if canUse.noMana is true?
+  -- We don't disable the button if it's only because of resources that we can't cast the spell
+  if (not self.canUse.usable and not self.canUse.noMana) or self.canUse.inRange == 0 then
+  -- if self.canUse.inRange == 0 then
+    -- Could do a different effect if self.canUse.noMana is true?
     self.colorTexture:SetColorTexture(1, 0, 0, 0.5)
   else
     self.colorTexture:SetColorTexture(0, 0, 0, 0)

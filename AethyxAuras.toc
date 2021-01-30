@@ -5,6 +5,7 @@
 
 ENV.lua
 spells_warrior.lua
+spells_racials.lua
 
 AAura.lua
 main.lua
