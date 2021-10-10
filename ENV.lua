@@ -30,8 +30,11 @@ end
 
 AAENV.lib.GetSpellCooldownAndCharges = function(id, gcdInfo)
   -- taken and modified from WeakAuras2 (WeakAuras.GetSpellCooldownUnified)
-  local charges, maxCharges, start, duration, modRate = GetSpellCharges(id)
   local matchesGCD
+  local charges, maxCharges, start, duration, modRate = GetSpellCharges(id)
+  start = start or 0
+  duration = duration or 0
+
   if (charges == nil) then -- spell does not work with charges
     local basecd = GetSpellBaseCooldown(id)
     local enabled
@@ -99,6 +102,10 @@ AAENV.lib.FindAuraByID = function(unit, id)
     res = {AAENV.lib.FindDebuffByID(unit, id)}
   end
   return unpack(res)
+end
+
+AAENV.lib.StrCapitalized = function(s)
+  return s:sub(1,1):upper()..s:sub(2):lower()
 end
 
 -- Compatible with Lua 5.1 (not 5.0).

@@ -6,51 +6,39 @@ local AANAME, AAENV = ...
 local lib = AAENV.lib
 local config = AAENV.config
 
-AAura = lib.class(function(aura, parentFrame, spellIdentifier, buffIdentifier)
-  local buff = {}
-  buff.name = buffIdentifier
-  aura.buff = buff
+local function initAura(aura)
+  aura.buff = {}
+  aura.buff.name = aura.spellConfig.buffName
   aura.buffActive = false
 
-  local spell = { name = nil, iconTexPath = nil, spellID = nil }
-  spell.name, _, spell.iconTexPath, _, _, _, spell.spellID = GetSpellInfo(spellIdentifier)
-  if spellIdentifier == "Storm Bolt" then
-    print(spellIdentifier)
-    print(unpack(spell)) -- WTFWTFWTF
-    print(GetSpellInfo(spellIdentifier))
-  end
-  aura.spell = spell
+  aura.spell = { name = nil, iconTexPath = nil, spellID = nil }
+  aura.spell.name, _, aura.spell.iconTexPath, _, _, _,
+    aura.spell.spellID = GetSpellInfo(aura.spellConfig.spellName)
 
-  -- "main" icon frame
-  local icon = CreateFrame("FRAME", nil, parentFrame, nil, nil);
-  aura.icon = icon
+    -- debug if
+  -- if spellConfig.spellName == "Overpower" then
+  --   print(spellConfig.spellName)
+  --   print(spell) -- WTFWTFWTF
+  --   print(GetSpellInfo(spellConfig.spellName))
+  -- end -- end debug if
+
+  local icon = aura.icon
   icon:SetFrameStrata("LOW")
   icon:SetWidth(config.auraSize)
   icon:SetHeight(config.auraSize)
 
-  -- Background texture for the icon
-  local tex = icon:CreateTexture(nil, "BACKGROUND")
-  aura.texture = tex
+  local tex = aura.texture
   tex:SetAllPoints(icon) -- hook to icon's frame
   -- set a texZoom on the texture to avoid the (ugly-ass) icon corners
   local texZoom = 0.07
   tex:SetTexCoord(0 + texZoom, 1 - texZoom, 0 + texZoom, 1 - texZoom)
+  tex:SetTexture(aura.spell.iconTexPath) -- set as background texture
 
-  if not spell.name or not spell.iconTexPath or not spell.spellID then
-    aura:Hide()
-  else
-    tex:SetTexture(spell.iconTexPath) -- set as background texture
-  end
-
-  -- Foreground texture for the red overlay
-  local colorTexture = icon:CreateTexture(nil, "OVERLAY")
-  aura.colorTexture = colorTexture
+  local colorTexture = aura.colorTexture
   colorTexture:SetAllPoints(icon) -- hook to icon's frame
   colorTexture:SetColorTexture(0, 0, 0, 0)
 
-  -- Cooldown frame for the icon
-  local cdSpin = CreateFrame("COOLDOWN", nil, icon, "CooldownFrameTemplate");
-  aura.cdSpin = cdSpin
+  local cdSpin = aura.cdSpin
   cdSpin:SetAllPoints(icon)
 
   -- Can hold a C_Timer.NewTimer to track when the cooldown is supposed to finish
@@ -62,7 +50,32 @@ AAura = lib.class(function(aura, parentFrame, spellIdentifier, buffIdentifier)
   aura.canUse.usable = nil
   aura.canUse.noMana = nil
   aura.canUse.inRange = nil
+end
+
+AAura = lib.class(function(aura, parentFrame, spellConfig)
+  -- Set base configuration to identify this aura
+  aura.spellConfig = spellConfig
+  -- "main" icon frame
+  aura.icon = CreateFrame("FRAME", nil, parentFrame, nil, nil);
+  -- Background texture for the icon
+  aura.texture = aura.icon:CreateTexture(nil, "BACKGROUND")
+  -- Foreground texture for the red overlay
+  aura.colorTexture = aura.icon:CreateTexture(nil, "OVERLAY")
+  -- Cooldown frame for the icon
+  aura.cdSpin = CreateFrame("COOLDOWN", nil, icon, "CooldownFrameTemplate");
+
+  initAura(aura)
 end)
+
+function AAura:Initialize()
+  initAura(self)
+  self:Show()
+end
+
+function AAura:Remove()
+  self:Hide()
+  --TODO(aethyx): additional logic?
+end
 
 function AAura:Show()
   self.icon:Show()

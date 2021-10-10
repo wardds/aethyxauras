@@ -6,7 +6,7 @@ AAENV.spells.WARRIOR = {}
 AAENV.spells.WARRIOR.Arms = {
   { spellName = "Storm Bolt", group = 1 },
   { spellName = "Berserker Rage", group = 1 },
-  { spellName = "Warbreaker", group = 1 },
+  { spellName = "Colossus Smash", group = 1 },
   { spellName = "Skullsplitter", group = 1 },
   { spellName = "Mortal Strike", group = 1 },
   { spellName = "Overpower", group = 1 },
